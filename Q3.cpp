@@ -5,59 +5,64 @@ struct X {
     X() { cout << "default constructor\n"; }
     X(X&& x) { cout << "move constructor\n"; }
     X(const X& x) { cout << "copy constructor\n"; }
-    constexpr X& operator=(const X&) {
-        cout << "copy assignment\n";
-        return *this;
-    }
+    X& operator=(const X&){ cout << "copy assignment\n"; return *this; }
     ~X() { cout << "Destructor\n"; }
 };
 
+// Function that takes an object by value and returns it
 X foo(X x) {
-    return x;
+    return x;  // Here, the returned object may use move or copy semantics
 }
 
 int main() {
-    X obj;
-    obj = foo(obj);
+    X obj;  // Calls default constructor
+    obj = foo(obj);  // Invokes foo() and assigns its result to obj
 }
 
 /*
 ___________________Detailed Output and Reasoning_________________
-Creating obj:
-    In main(), the statement X obj; calls the default constructor.
+Step-by-Step Execution with Outputs So Far:
+Step 1: X obj;
+    -The default constructor is called to create obj.
     Output so far: default constructor
 
-Calling foo(obj):
-    foo takes the argument obj by value. This means a copy of obj is created to pass it into the function.
-    Therefore, the copy constructor is called when foo is invoked.
-    Output so far: default constructor
-                   copy constructor
+Step 2: obj = foo(obj);
+    -This line involves several steps, broken down below:
+        foo(obj) call: foo takes a parameter by value, meaning the copy constructor is invoked to pass obj to foo.
+        Output so far:  default constructor
+                        copy constructor
 
-Returning from foo():
-    The return statement return x; in foo() tries to return the local object x.
-    Since the function returns an object, the compiler will try to move the local x (if possible). Thus, the move constructor is called to return the object.
-    Output so far: default constructor
-                   copy constructor
-                   move constructor
+        Inside foo: The local parameter x (a copy of obj) is returned from foo. When returning, move semantics are used, triggering the move constructor.
+        Output so far:  default constructor
+                        copy constructor
+                        move constructor
 
-Assignment to obj:
-    Back in main(), the result of foo(obj) is assigned to obj using the copy assignment operator.
-    Output so far:  default constructor
-                    copy constructor
-                    move constructor
-                    copy assignment
+        Assigning the result to obj: The result of foo(obj) is assigned to obj. This triggers the copy assignment operator.
+        Output so far:  default constructor
+                        copy constructor
+                        move constructor
+                        copy assignment
 
-Destruction of Temporary Objects:
-    After the assignment, the temporary objects created during the copy and move operations will be destroyed.
-    The destructors will be called for:
-        -The object x inside foo().
-        -The temporary moved object returned by foo().
-        Final Output: default constructor
+        Temporary object destruction: After the move, the temporary object created inside foo is destroyed, triggering the destructor.
+        Output so far:  default constructor
                         copy constructor
                         move constructor
                         copy assignment
                         Destructor
-                        Destructor
+
+Step 3: Exiting main()
+    -At the end of main, the original obj goes out of scope, triggering its destructor.
+    Final Output: default constructor
+                    copy constructor
+                    move constructor
+                    copy assignment
+                    Destructor
+                    Destructor
+
+Removing constexpr from Copy Assignment Operator:
+    Effect: Removing constexpr has no effect on the output or behavior because the copy assignment operator is only used at runtime here. The output remains the same.
+
+
 
 
 */
